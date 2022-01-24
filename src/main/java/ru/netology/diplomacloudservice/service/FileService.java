@@ -32,7 +32,7 @@ public class FileService {
     private MyUserRepository myUserRepository;
 
     //Upload file
-    public UploadFileResponse store(MultipartFile file, String authToken)  {
+    public UploadFileResponse uploadFile(MultipartFile file, String authToken)  {
         final MyUser myUser = getUserByToken(authToken);
         if (myUser == null) {
             throw new UnauthorizedException("User unauthorized");
@@ -50,6 +50,8 @@ public class FileService {
     //Update file
     @Transactional
     public UploadFileResponse updateFile(String fileName, UpdateFileRequest newName, String authToken) {
+        System.out.println(fileName);
+        System.out.println(newName.getFilename());
         final MyUser myUser = getUserByToken(authToken);
         if (myUser == null) {
             throw new UnauthorizedException("User unauthorized");
@@ -59,9 +61,9 @@ public class FileService {
         if (oldFileSt == null) {
             throw new FileStNotFoundException("File not found");
         }
-        fileRepository.updateNameByNameAndMyUser(newName.getName(), fileName, myUser);
+        fileRepository.updateNameByNameAndMyUser(newName.getFilename(), fileName, myUser);
         //Проверка на успешное обновление
-        FileSt newFileSt = fileRepository.findByNameAndMyUser(newName.getName(), myUser);
+        FileSt newFileSt = fileRepository.findByNameAndMyUser(newName.getFilename(), myUser);
         if (newFileSt == null) {
             throw new FileStNotFoundException("File has not been updated");
         }
@@ -90,7 +92,7 @@ public class FileService {
     }
 
     //Get file
-    public FileSt getFileByNameAndMyUser(String fileName, String authToken) {
+    public byte[] getFileByNameAndMyUser(String fileName, String authToken) {
         final MyUser myUser = getUserByToken(authToken);
         if (myUser == null) {
             throw new UnauthorizedException("User unauthorized");
@@ -99,7 +101,7 @@ public class FileService {
         if (fileSt == null) {
             throw new FileStNotFoundException("File not found");
         }
-        return fileSt;
+        return fileSt.getData();
     }
 
     //Get list
