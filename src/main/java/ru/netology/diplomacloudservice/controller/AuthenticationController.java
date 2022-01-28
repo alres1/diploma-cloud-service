@@ -1,6 +1,6 @@
 package ru.netology.diplomacloudservice.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -17,46 +17,47 @@ import ru.netology.diplomacloudservice.security.AuthRequest;
 import ru.netology.diplomacloudservice.security.AuthResponse;
 
 @RestController()
+@Slf4j
 public class AuthenticationController {
 
-
-    @Autowired
     private AuthenticationManager authenticationManager;
-
-    @Autowired
     private JWTUtil jwtTokenUtil;
-
-    @Autowired
     private AuthRepository authRepository;
 
+    public AuthenticationController (AuthenticationManager authenticationManager, JWTUtil jwtTokenUtil, AuthRepository authRepository) {
+        this.authenticationManager = authenticationManager;
+        this.jwtTokenUtil = jwtTokenUtil;
+        this.authRepository = authRepository;
+    }
 
     @PostMapping("/login")
     @ResponseStatus(HttpStatus.OK)
     public AuthResponse createAuthenticationToken(@RequestBody AuthRequest authRequest) {
         Authentication authentication;
         if(authRequest.getLogin()==null || authRequest.getPassword()==null){
+            log.error("Bad credentials");
             throw new InputDataException("Bad credentials");
         }
         try {
             authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.getLogin(), authRequest.getPassword()));
-            //System.out.println(authentication);
         } catch (BadCredentialsException e) {
+            log.error("User unauthorized");
             throw new UnauthorizedException("User unauthorized");
         }
 
         String jwt = jwtTokenUtil.generateToken((UserDetails) authentication.getPrincipal());
         String username = authentication.getName();
         authRepository.putTokenAndUsername(jwt, username);
-
+        log.info("Success authentication user "+username);
         return new AuthResponse(jwt);
     }
 
 
-    // @PostMapping ("/logout") - возвращает 405 ошибку Method Not Allowed
-    @RequestMapping(value = {"/logout2"}, method = RequestMethod.POST)
+    @RequestMapping(value = {"/logout"}, method = RequestMethod.POST)
     public ResponseEntity logout(@RequestHeader("auth-token") String authToken) {
         final String token = authToken.substring(7);
         authRepository.removeUserByToken(token);
+        log.info("Success logout user");
         return ResponseEntity.ok(HttpStatus.OK);
     }
 

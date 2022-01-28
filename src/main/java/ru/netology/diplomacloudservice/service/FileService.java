@@ -1,5 +1,7 @@
 package ru.netology.diplomacloudservice.service;
 
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,27 +24,29 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
+@AllArgsConstructor
+@Slf4j
 public class FileService {
 
-    @Autowired
     private FileRepository fileRepository;
-    @Autowired
     private AuthRepository authRepository;
-    @Autowired
     private MyUserRepository myUserRepository;
 
     //Upload file
     public UploadFileResponse uploadFile(MultipartFile file, String authToken)  {
         final MyUser myUser = getUserByToken(authToken);
         if (myUser == null) {
+            log.error("User unauthorized");
             throw new UnauthorizedException("User unauthorized");
         }
         try {
             String fileName = file.getOriginalFilename();
             FileSt fileSt = new FileSt(UUID.randomUUID().toString(), fileName, file.getContentType(), file.getSize(), file.getBytes(), myUser);
             fileRepository.save(fileSt);
+            log.info("Success upload file "+fileSt.getName());
             return mapToFileResponse(fileSt);
         }catch (IOException ex){
+            log.error("Error input data. User "+myUser.getLogin());
             throw new InputDataException("Error input data");
         }
     }
@@ -50,23 +54,26 @@ public class FileService {
     //Update file
     @Transactional
     public UploadFileResponse updateFile(String fileName, UpdateFileRequest newName, String authToken) {
-        System.out.println(fileName);
-        System.out.println(newName.getFilename());
+
         final MyUser myUser = getUserByToken(authToken);
         if (myUser == null) {
+            log.error("User unauthorized");
             throw new UnauthorizedException("User unauthorized");
         }
         //Проверка на существование файла для изменения
         FileSt oldFileSt = fileRepository.findByNameAndMyUser(fileName, myUser);
         if (oldFileSt == null) {
+            log.error("File "+fileName+" not found");
             throw new FileStNotFoundException("File not found");
         }
         fileRepository.updateNameByNameAndMyUser(newName.getFilename(), fileName, myUser);
         //Проверка на успешное обновление
         FileSt newFileSt = fileRepository.findByNameAndMyUser(newName.getFilename(), myUser);
         if (newFileSt == null) {
+            log.error("File "+newName.getFilename()+" has not been updated");
             throw new FileStNotFoundException("File has not been updated");
         }
+        log.info("Success update file "+newFileSt.getName());
         return  mapToFileResponse(newFileSt);
     }
 
@@ -75,19 +82,23 @@ public class FileService {
     public boolean deleteFile(String fileName, String authToken) {
         final MyUser myUser = getUserByToken(authToken);
         if (myUser == null) {
+            log.error("User unauthorized");
             throw new UnauthorizedException("User unauthorized");
         }
         //Проверка на существование файла для изменения
         FileSt oldFileSt = fileRepository.findByNameAndMyUser(fileName, myUser);
         if (oldFileSt == null) {
+            log.error("File "+fileName+" not found");
             throw new FileStNotFoundException("File not found");
         }
         fileRepository.deleteByNameAndMyUser(fileName, myUser);
-        //Заменить вывод в ответе
+        //Проверка удаления файла
         FileSt fileSt = fileRepository.findByNameAndMyUser(fileName, myUser);
         if (fileSt != null) {
+            log.error("File "+fileName+" has not been deleted");
             throw new FileStNotFoundException("File has not been deleted");
         }
+        log.info("Success delete file "+fileName);
         return true;
     }
 
@@ -95,12 +106,15 @@ public class FileService {
     public byte[] getFileByNameAndMyUser(String fileName, String authToken) {
         final MyUser myUser = getUserByToken(authToken);
         if (myUser == null) {
+            log.error("User unauthorized");
             throw new UnauthorizedException("User unauthorized");
         }
         final FileSt fileSt = fileRepository.findByNameAndMyUser(fileName, myUser);
         if (fileSt == null) {
+            log.error("File "+fileSt.getName()+" not found");
             throw new FileStNotFoundException("File not found");
         }
+        log.info("Success get file "+fileSt.getName());
         return fileSt.getData();
     }
 
@@ -108,8 +122,10 @@ public class FileService {
     public List<UploadFileResponse> getFileList(String authToken){
         final MyUser myUser = getUserByToken(authToken);
         if (myUser == null) {
+            log.error("User unauthorized");
             throw new UnauthorizedException("User unauthorized");
         }
+        log.info("Success get all files. User "+myUser.getLogin());
         return fileRepository.findAllByMyUser(myUser)
                 .stream()
                 .map(this::mapToFileResponse)

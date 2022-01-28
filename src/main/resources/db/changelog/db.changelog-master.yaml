@@ -1,0 +1,97 @@
+databaseChangeLog:
+  - logicalFilePath: db/changelog/changelog-app.yaml
+  - changeSet:
+      id: 1
+      author: liquibase_user
+      changes:
+        - createTable:
+            tableName: my_user
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: login
+                  type: varchar(255)
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
+                  name: password
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: role
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+  - changeSet:
+      id: 2
+      author: liquibase_user
+      changes:
+        - createTable:
+            tableName: file_st
+            columns:
+              - column:
+                  name: id
+                  type: varchar(255)
+                  constraints:
+                    primaryKey: true
+                    unique: true
+                    nullable: false
+              - column:
+                  name: data
+                  type: LONGBLOB
+              - column:
+                  name: name
+                  type: varchar(255)
+              - column:
+                  name: type
+                  type: varchar(50)
+              - column:
+                  name: my_user_id
+                  type: BIGINT
+                  constraints:
+                    foreignKeyName: file_st_id_my_user_id
+                    references: my_user(id)
+              - column:
+                  name: size
+                  type: BIGINT
+  - changeSet:
+      id: 3
+      author: liquibase_user
+      comment: "Create users"
+      changes:
+        - insert:
+            tableName: my_user
+            columns:
+              - column:
+                  name: login
+                  value: "user1"
+              - column:
+                  name: password
+                  value: "$2y$10$ucRxNm00UVAwLvc7BOWHHuSuRZaMGNItMqDajdLI8N2r.bSNO1xp2" #пароль: password
+              - column:
+                  name: role
+                  value: "USER"
+        - insert:
+            tableName: my_user
+            columns:
+              - column:
+                  name: login
+                  value: "user2"
+              - column:
+                  name: password
+                  value: "$2y$10$ucRxNm00UVAwLvc7BOWHHuSuRZaMGNItMqDajdLI8N2r.bSNO1xp2" #пароль: password
+              - column:
+                  name: role
+                  value: "USER"
+      rollback:
+        - delete:
+            tableName: my_user
+            where: login in ('user1', 'user2')

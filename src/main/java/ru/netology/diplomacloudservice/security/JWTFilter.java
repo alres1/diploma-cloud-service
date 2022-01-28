@@ -1,6 +1,5 @@
 package ru.netology.diplomacloudservice.security;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
@@ -8,7 +7,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import ru.netology.diplomacloudservice.service.CustomUserDetailsService;
-
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -20,11 +18,13 @@ import java.util.List;
 @Component
 public class JWTFilter extends OncePerRequestFilter {
 
-    @Autowired
     private JWTUtil jwtUtil;
+    private CustomUserDetailsService userDetailsService;
 
-    @Autowired
-    CustomUserDetailsService userDetailsService;
+    public JWTFilter(CustomUserDetailsService userDetailsService, JWTUtil jwtUtil) {
+        this.userDetailsService = userDetailsService;
+        this.jwtUtil = jwtUtil;
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)

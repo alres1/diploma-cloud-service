@@ -1,6 +1,5 @@
 package ru.netology.diplomacloudservice.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -12,8 +11,12 @@ import ru.netology.diplomacloudservice.repository.MyUserRepository;
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
-    @Autowired
     private MyUserRepository dao;
+
+    public CustomUserDetailsService(MyUserRepository dao) {
+        this.dao = dao;
+    }
+
     @Override
     public UserDetails loadUserByUsername(String userName) throws UsernameNotFoundException {
         MyUser myUser= dao.findByLogin(userName);

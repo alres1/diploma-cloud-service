@@ -1,7 +1,6 @@
 package ru.netology.diplomacloudservice.controller;
 
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,9 +17,7 @@ import java.util.List;
 @AllArgsConstructor
 public class FileController {
 
-    @Autowired
     private FileService fileService;
-
 
     @PostMapping("/file")
     public UploadFileResponse uploadFile(@RequestHeader("auth-token") String authToken, MultipartFile file) {
