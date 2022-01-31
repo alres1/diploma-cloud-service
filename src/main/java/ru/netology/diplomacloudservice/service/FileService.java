@@ -88,16 +88,21 @@ public class FileService {
         //Проверка на существование файла для изменения
         FileSt oldFileSt = fileRepository.findByNameAndMyUser(fileName, myUser);
         if (oldFileSt == null) {
-            log.error("File "+fileName+" not found");
+            log.error("File " + fileName + " not found");
             throw new FileStNotFoundException("File not found");
         }
-        fileRepository.deleteByNameAndMyUser(fileName, myUser);
-        //Проверка удаления файла
-        FileSt fileSt = fileRepository.findByNameAndMyUser(fileName, myUser);
-        if (fileSt != null) {
+        try {
+            fileRepository.deleteByNameAndMyUser(fileName, myUser);
+        } catch (FileStNotFoundException ex){
             log.error("File "+fileName+" has not been deleted");
             throw new FileStNotFoundException("File has not been deleted");
         }
+        //Проверка удаления файла
+//        FileSt fileSt = fileRepository.findByNameAndMyUser(fileName, myUser);
+//        if (fileSt != null) {
+//            log.error("File "+fileName+" has not been deleted");
+//            throw new FileStNotFoundException("File has not been deleted");
+//        }
         log.info("Success delete file "+fileName);
         return true;
     }
