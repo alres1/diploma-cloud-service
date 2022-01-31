@@ -4,7 +4,7 @@ services:
   app:
     image: back
     container_name: 'cloud-service'
-    build: .
+    build: ./
     ports:
       - "8080:8080"
     depends_on:
